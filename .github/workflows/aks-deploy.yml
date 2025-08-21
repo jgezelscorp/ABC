@@ -37,7 +37,7 @@ jobs:
             az config set bicep.use_binary_from_path=false
 
             # Install a modern Bicep compatible with current base images
-            az bicep install --version "${BICEP_VERSION}" --force
+            az bicep install --version "${BICEP_VERSION}"
             az bicep version
 
             # --- OIDC: request a GitHub ID token and exchange it with Azure ---
