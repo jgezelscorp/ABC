@@ -20,7 +20,7 @@ jobs:
       - name: Setup Azure CLI
         uses: azure/cli@v1
         with:
-          upgrade: true
+          upgrade: false
 
       - name: Install Bicep CLI
         run: |
