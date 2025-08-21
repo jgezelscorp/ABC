@@ -1,4 +1,4 @@
-name: AKS CI/CD Deploy!
+name: AKS CI/CD Deploy
 
 on:
   pull_request:
@@ -23,17 +23,6 @@ jobs:
           azcliversion: 2.76.0     # optional; omit to use agent’s/default image
           inlineScript: |
             az version
-
-      - name: Show workspace and repo tree (debug)
-        run: |
-          echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
-          echo "pwd: $(pwd)"
-          echo "Listing repo root:"
-          ls -la
-          echo "Listing AVM folder if present:"
-          ls -la AVM || true
-          echo "Listing AVM/AKS folder if present:"
-          ls -la AVM/AKS || true
 
       - name: Install Bicep CLI
         run: |
