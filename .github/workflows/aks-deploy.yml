@@ -17,16 +17,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Azure CLI
+      - name: Setup Azure CLI & Bicep
         uses: azure/cli@v2
         with:
           azcliversion: 2.76.0     # optional; omit to use agent’s/default image
           inlineScript: |
             az version
+            # Use a writable config dir inside the workspace
+            export AZURE_CONFIG_DIR="$GITHUB_WORKSPACE/.azcfg"
+            mkdir -p "$AZURE_CONFIG_DIR"
 
-      - name: Install Bicep CLI
-        run: |
-          az bicep install --version latest
+            # (Optional) avoid path confusion on some runners
+            az config set bicep.use_binary_from_path=false
+            az bicep install --version latest
+            az bicep version
 
       - name: Bicep build
         run: |
