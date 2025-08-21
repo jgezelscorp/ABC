@@ -2,7 +2,7 @@ name: AKS CI/CD Deploy
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -65,7 +65,7 @@ jobs:
           rg_exists=$(az group exists --name ${{ secrets.AKS_RG }} )
           echo "rg_exists=$rg_exists" >> $GITHUB_OUTPUT
 
-      - name: What-If deployment
+      - name: What-If
         if: steps.rg.outputs.rg_exists == 'true'
         run: |
           if [ -f AVM/AKS/parameters.bicepparam ]; then
@@ -73,7 +73,7 @@ jobs:
           else
             PARAMETERS='@AVM/AKS/parameters.json'
           fi
-          az deployment group what-if --resource-group ${{ secrets.AKS_RG }} --template-file AVM/AKS/main.bicep --parameters $PARAMETERS --no-prompt
+          az deployment group --whatif --resource-group ${{ secrets.AKS_RG }} --template-file AVM/AKS/main.bicep --parameters $PARAMETERS --no-prompt
 
       - name: Validate (will create RG if missing)
         if: steps.rg.outputs.rg_exists != 'true'
