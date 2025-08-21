@@ -79,30 +79,20 @@ jobs:
       - name: What-If
         if: steps.rg.outputs.rg_exists == 'true'
         run: |
-          if [ -f AVM/AKS/parameters.bicepparam ]; then
-            PARAMETERS='@parameters.bicepparam'
-          else
-            PARAMETERS='@parameters.json'
-          fi
           az deployment group what-if \
             --resource-group "${{ secrets.AKS_RG }}" \
             --template-file main.bicep \
-            --parameters "$PARAMETERS" \
+            --parameters parameters.bicepparam \
             --no-prompt
 
       - name: Validate (will create RG if missing)
         if: steps.rg.outputs.rg_exists != 'true'
         run: |
-          az group create --name "${{ secrets.AKS_RG }}" --location "${{ secrets.AKS_LOCATION }}"
-          if [ -f parameters.bicepparam ]; then
-            PARAMETERS='@parameters.bicepparam'
-          else
-            PARAMETERS='@parameters.json'
-          fi
+          az group create --name "${{ secrets.AKS_RG }}" --location "${{ secrets.AKS_LOCATION }}"          
           az deployment group validate \
             --resource-group "${{ secrets.AKS_RG }}" \
             --template-file main.bicep \
-            --parameters "$PARAMETERS"
+            --parameters parameters.bicepparam
 
   deploy-on-merge:
     needs: validate-and-whatif
@@ -149,13 +139,8 @@ jobs:
 
       - name: Deploy AKS
         run: |
-          if [ -f parameters.bicepparam ]; then
-            PARAMETERS='@parameters.bicepparam'
-          else
-            PARAMETERS='@parameters.json'
-          fi
           az deployment group create \
             --resource-group "${{ secrets.AKS_RG }}" \
             --template-file main.bicep \
-            --parameters "$PARAMETERS" \
+            --parameters parameters.bicepparam \
             --confirm-with-what-if
