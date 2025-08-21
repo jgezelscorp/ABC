@@ -38,7 +38,7 @@ jobs:
             az config set bicep.use_binary_from_path=false
 
             # Install a modern Bicep (avoid old builds that break on newer OpenSSL stacks)
-            az bicep install --version "${BICEP_VERSION}" --force
+            az bicep install --version "${BICEP_VERSION}"
             az bicep version
 
             # --- OIDC: fetch GitHub ID token and exchange with Azure ---
@@ -125,7 +125,7 @@ jobs:
             set -euo pipefail
             mkdir -p "$AZURE_CONFIG_DIR"
             az config set bicep.use_binary_from_path=false
-            az bicep install --version "${BICEP_VERSION}" --force
+            az bicep install --version "${BICEP_VERSION}"
 
             OIDC_TOKEN=$(curl -sS -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
               "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=api://AzureADTokenExchange" \
