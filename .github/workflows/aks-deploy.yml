@@ -1,4 +1,4 @@
-name: AKS CI/CD Deploy
+name: AKS CI/CD Deploy!
 
 on:
   pull_request:
