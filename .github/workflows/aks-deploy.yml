@@ -81,9 +81,10 @@ jobs:
         run: |
           az deployment group what-if \
             --resource-group "${{ secrets.AKS_RG }}" \
-            --template-file main.bicep \
             --parameters parameters.bicepparam \
             --no-prompt
+
+        #--template-file main.bicep \
 
       - name: Validate (will create RG if missing)
         if: steps.rg.outputs.rg_exists != 'true'
@@ -91,7 +92,6 @@ jobs:
           az group create --name "${{ secrets.AKS_RG }}" --location "${{ secrets.AKS_LOCATION }}"          
           az deployment group validate \
             --resource-group "${{ secrets.AKS_RG }}" \
-            --template-file main.bicep \
             --parameters parameters.bicepparam
 
   deploy-on-merge:
