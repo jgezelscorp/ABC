@@ -1,7 +1,7 @@
 using 'br/public:avm/res/container-service/managed-cluster:0.10.0'
 
 param name = 'avm-aks-cluster'
-param location = 'westeurope'
+param location = 'belgiumcentral'
 
 param primaryAgentPoolProfiles = [
   {
