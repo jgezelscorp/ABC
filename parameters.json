@@ -6,17 +6,7 @@
       "value": "avm-aks-cluster"
     },
     "location": {
-      "value": "westeurope"
-    },
-    "primaryAgentPoolProfiles": {
-      "value": [
-        {
-          "name": "systempool",
-          "mode": "System",
-          "vmSize": "Standard_DS2_v2",
-          "count": 1
-        }
-      ]
+      "value": "belgiumcentral"
     },
     "managedIdentities": {
       "value": {
