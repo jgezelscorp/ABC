@@ -3,6 +3,8 @@ name: AKS CI/CD Deploy
 on:
   pull_request:
     branches: [ main ]
+  push:
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -28,29 +30,11 @@ jobs:
 
       - name: Bicep build
         run: |
-          az bicep build --file AVM/AKS/main.bicep
+          az bicep build --file main.bicep
 
-      - name: Install and run Bicep linter
+      - name: Bicep lint
         run: |
-          set -e
-          echo 'Attempting to install bicep-lint via npm (if available)'
-          if command -v npm >/dev/null 2>&1; then
-            npm install -g @microsoft/bicep-linter@latest || true
-          fi
-
-          echo 'Attempting to install bicep-lint as a dotnet tool (if npm unavailable)'
-          if ! command -v bicep-lint >/dev/null 2>&1 && command -v dotnet >/dev/null 2>&1; then
-            dotnet tool install --global bicep-linter || true
-            export PATH="$PATH:$HOME/.dotnet/tools"
-          fi
-
-          if ! command -v bicep-lint >/dev/null 2>&1; then
-            echo 'bicep-lint is not available. Failing the job to enforce linting.'
-            exit 1
-          fi
-
-          echo 'Running bicep-lint against AVM/AKS/main.bicep'
-          bicep-lint AVM/AKS/main.bicep
+          az bicep lint --file main.bicep
 
       - name: Azure Login
         uses: azure/login@v1
@@ -68,28 +52,28 @@ jobs:
       - name: What-If
         if: steps.rg.outputs.rg_exists == 'true'
         run: |
-          if [ -f AVM/AKS/parameters.bicepparam ]; then
-            PARAMETERS='@AVM/AKS/parameters.bicepparam'
+          if [ -f parameters.bicepparam ]; then
+            PARAMETERS='@parameters.bicepparam'
           else
-            PARAMETERS='@AVM/AKS/parameters.json'
+            PARAMETERS='@parameters.json'
           fi
-          az deployment group --whatif --resource-group ${{ secrets.AKS_RG }} --template-file AVM/AKS/main.bicep --parameters $PARAMETERS --no-prompt
+          az deployment group what-if --resource-group ${{ secrets.AKS_RG }} --template-file main.bicep --parameters $PARAMETERS --no-prompt
 
       - name: Validate (will create RG if missing)
         if: steps.rg.outputs.rg_exists != 'true'
         run: |
           az group create --name ${{ secrets.AKS_RG }} --location ${{ secrets.AKS_LOCATION }}
-          if [ -f AVM/AKS/parameters.bicepparam ]; then
-            PARAMETERS='@AVM/AKS/parameters.bicepparam'
+          if [ -f parameters.bicepparam ]; then
+            PARAMETERS='@parameters.bicepparam'
           else
-            PARAMETERS='@AVM/AKS/parameters.json'
+            PARAMETERS='@parameters.json'
           fi
-          az deployment group validate --resource-group ${{ secrets.AKS_RG }} --template-file AVM/AKS/main.bicep --parameters $PARAMETERS
+          az deployment group validate --resource-group ${{ secrets.AKS_RG }} --template-file main.bicep --parameters $PARAMETERS
 
   deploy-on-merge:
     needs: validate-and-whatif
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -103,9 +87,9 @@ jobs:
 
       - name: Deploy AKS
         run: |
-          if [ -f AVM/AKS/parameters.bicepparam ]; then
-            PARAMETERS='@AVM/AKS/parameters.bicepparam'
+          if [ -f parameters.bicepparam ]; then
+            PARAMETERS='@parameters.bicepparam'
           else
-            PARAMETERS='@AVM/AKS/parameters.json'
+            PARAMETERS='@parameters.json'
           fi
-          az deployment group create --resource-group ${{ secrets.AKS_RG }} --template-file AVM/AKS/main.bicep --parameters $PARAMETERS --confirm-with-what-if
+          az deployment group create --resource-group ${{ secrets.AKS_RG }} --template-file main.bicep --parameters $PARAMETERS --confirm-with-what-if
