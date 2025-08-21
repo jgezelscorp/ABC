@@ -62,7 +62,7 @@ jobs:
       - name: Ensure Bicep on host
         run: |
           az config set bicep.use_binary_from_path=false
-          az bicep upgrade --version "$BICEP_VERSION"
+          az bicep upgrade
           az bicep version
 
       # You can use the direct binary (no az init) to avoid any config writes:
