@@ -68,7 +68,7 @@ jobs:
       # You can use the direct binary (no az init) to avoid any config writes:
       - name: Bicep build (host)
         run: |
-          "$AZURE_CONFIG_DIR/bin/bicep" build --file main.bicep
+          "$AZURE_CONFIG_DIR/bin/bicep" build main.bicep
 
       - name: Resource group check
         id: rg
