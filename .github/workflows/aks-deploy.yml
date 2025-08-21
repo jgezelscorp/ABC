@@ -82,7 +82,7 @@ jobs:
           az deployment group what-if \
             --resource-group "${{ secrets.AKS_RG }}" \
             --template-file main.bicep \
-            --parameters parameters.bicepparam \
+            --parameters @parameters.bicepparam \
             --no-prompt
 
       - name: Validate (will create RG if missing)
@@ -92,7 +92,7 @@ jobs:
           az deployment group validate \
             --resource-group "${{ secrets.AKS_RG }}" \
             --template-file main.bicep \
-            --parameters parameters.bicepparam
+            --parameters @parameters.bicepparam
 
   deploy-on-merge:
     needs: validate-and-whatif
@@ -142,5 +142,5 @@ jobs:
           az deployment group create \
             --resource-group "${{ secrets.AKS_RG }}" \
             --template-file main.bicep \
-            --parameters parameters.bicepparam \
+            --parameters @parameters.bicepparam \
             --confirm-with-what-if
