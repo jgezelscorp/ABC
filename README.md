@@ -19,4 +19,4 @@ Required GitHub Secrets:
 Notes:
 - The Bicep module used is `br/public:avm/res/container-service/managed-cluster:0.10.0` — you can adjust version as needed.
 - The workflow performs a `bicep build` and uses `az deployment group what-if` for validation on PRs.
-- Customize `parameters.json` for your sizing and networking needs..
+- Customize `parameters.json` for your sizing and networking needs.
