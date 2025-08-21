@@ -23,7 +23,6 @@ jobs:
           azcliversion: 2.76.0     # optional; omit to use agent’s/default image
           inlineScript: |
             az version
-            az account show
 
       - name: Install Bicep CLI
         run: |
