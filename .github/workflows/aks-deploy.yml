@@ -18,9 +18,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Azure CLI
-        uses: azure/cli@v1
+        uses: azure/cli@v2
         with:
-          upgrade: false
+          azcliversion: 2.76.0     # optional; omit to use agent’s/default image
+          inlineScript: |
+            az version
+            az account show
 
       - name: Install Bicep CLI
         run: |
