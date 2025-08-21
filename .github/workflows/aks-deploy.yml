@@ -6,63 +6,65 @@ on:
 
 permissions:
   contents: read
-  id-token: write           # required to request the OIDC token
+  id-token: write
   actions: write
   deployments: write
 
 jobs:
   validate-and-whatif:
-    # Use the explicit image to reduce surprises with runner updates
     runs-on: ubuntu-24.04
     env:
-      # Use a writable, shared CLI config dir that both container & host can access
+      # Shared Azure CLI profile/cache & Bicep location used by BOTH container and host
       AZURE_CONFIG_DIR: ${{ github.workspace }}/.azcfg
       BICEP_VERSION: v0.37.4
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --- Login & Bicep install happen inside the azure/cli container ---
-      - name: OIDC login in container + Install Bicep (shared config)
+      # Make the shared config directory up-front on the HOST
+      - name: Prepare shared AZ CLI profile dir (host)
+        run: mkdir -p "$AZURE_CONFIG_DIR"
+
+      # --- Login + install happen inside the azure/cli container and write into $GITHUB_WORKSPACE/.azcfg ---
+      - name: OIDC login in container + Install Bicep (shared)
         uses: azure/cli@v2
         with:
           azcliversion: 2.76.0
           inlineScript: |
             set -euo pipefail
-
-            # Ensure shared config dir exists (this path is bind-mounted)
             mkdir -p "$AZURE_CONFIG_DIR"
 
-            # Make az use the Bicep it manages in AZURE_CONFIG_DIR/bin
+            # Ensure az uses the bicep it manages under $AZURE_CONFIG_DIR/bin
             az config set bicep.use_binary_from_path=false
 
-            # Install a modern Bicep compatible with current base images
-            az bicep install --version "${BICEP_VERSION}"
+            # Install a modern Bicep (avoid old builds that break on newer OpenSSL stacks)
+            az bicep install --version "${BICEP_VERSION}" --force
             az bicep version
 
-            # --- OIDC: request a GitHub ID token and exchange it with Azure ---
-            # GitHub exposes these env vars when permissions.id-token=write
+            # --- OIDC: fetch GitHub ID token and exchange with Azure ---
             OIDC_TOKEN=$(curl -sS -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
               "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=api://AzureADTokenExchange" \
               | jq -r '.value')
-
-            # Sign in to Azure with federated identity (no secret needed)
             az login --service-principal \
               --username "${{ secrets.AZURE_CLIENT_ID }}" \
               --tenant   "${{ secrets.AZURE_TENANT_ID }}" \
               --federated-token "$OIDC_TOKEN"
-
             az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
             az account show
 
-            # Optional: quick build inside the container (ensures Bicep is OK)
-            az bicep build --file main.bicep
+      # --- HOST steps from here down, reusing the SAME AZURE_CONFIG_DIR ---
 
-      # --- From here down, everything runs on the host runner using the same AZURE_CONFIG_DIR ---
-
-      - name: Bicep build (host)
+      # Make sure host has a bicep it can run (same shared location). This is fast if already present.
+      - name: Ensure Bicep on host
         run: |
-          az bicep build --file main.bicep
+          az config set bicep.use_binary_from_path=false
+          az bicep upgrade --version "$BICEP_VERSION"
+          az bicep version
+
+      # Use the Bicep binary directly to avoid any az init/config writes
+      - name: Bicep build (host, direct binary)
+        run: |
+          "$AZURE_CONFIG_DIR/bin/bicep" build --file main.bicep
 
       - name: Resource group check
         id: rg
@@ -112,8 +114,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Do the same containerized OIDC login so the host can reuse the session
-      - name: OIDC login in container (shared config)
+      - name: Prepare shared AZ CLI profile dir (host)
+        run: mkdir -p "$AZURE_CONFIG_DIR"
+
+      - name: OIDC login in container (shared)
         uses: azure/cli@v2
         with:
           azcliversion: 2.76.0
@@ -126,15 +130,13 @@ jobs:
             OIDC_TOKEN=$(curl -sS -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
               "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=api://AzureADTokenExchange" \
               | jq -r '.value')
-
             az login --service-principal \
               --username "${{ secrets.AZURE_CLIENT_ID }}" \
               --tenant   "${{ secrets.AZURE_TENANT_ID }}" \
               --federated-token "$OIDC_TOKEN"
-
             az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      - name: Deploy AKS (host)
+      - name: Deploy AKS
         run: |
           if [ -f parameters.bicepparam ]; then
             PARAMETERS='@parameters.bicepparam'
