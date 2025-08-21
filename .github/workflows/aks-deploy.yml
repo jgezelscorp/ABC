@@ -2,6 +2,9 @@ name: AKS CI/CD Deploy!
 
 on:
   pull_request:
+    branches: [ main ] 
+    types: [opened, synchronize, reopened]   # explicit; omit 'closed' here
+  push:
     branches: [ main ]
 
 permissions:
