@@ -41,7 +41,7 @@ jobs:
 
       - name: Bicep build
         run: |
-          az bicep build --file AVM/AKS/main.bicep
+          az bicep build --file main.bicep
 
       - name: Install and run Bicep linter
         run: |
@@ -62,8 +62,8 @@ jobs:
             exit 1
           fi
 
-          echo 'Running bicep-lint against AVM/AKS/main.bicep'
-          bicep-lint AVM/AKS/main.bicep
+          echo 'Running bicep-lint against main.bicep'
+          bicep-lint main.bicep
 
       - name: Azure Login
         uses: azure/login@v1
@@ -82,22 +82,22 @@ jobs:
         if: steps.rg.outputs.rg_exists == 'true'
         run: |
           if [ -f AVM/AKS/parameters.bicepparam ]; then
-            PARAMETERS='@AVM/AKS/parameters.bicepparam'
+            PARAMETERS='@parameters.bicepparam'
           else
-            PARAMETERS='@AVM/AKS/parameters.json'
+            PARAMETERS='@parameters.json'
           fi
-          az deployment group --whatif --resource-group ${{ secrets.AKS_RG }} --template-file AVM/AKS/main.bicep --parameters $PARAMETERS --no-prompt
+          az deployment group --whatif --resource-group ${{ secrets.AKS_RG }} --template-file main.bicep --parameters $PARAMETERS --no-prompt
 
       - name: Validate (will create RG if missing)
         if: steps.rg.outputs.rg_exists != 'true'
         run: |
           az group create --name ${{ secrets.AKS_RG }} --location ${{ secrets.AKS_LOCATION }}
-          if [ -f AVM/AKS/parameters.bicepparam ]; then
-            PARAMETERS='@AVM/AKS/parameters.bicepparam'
+          if [ -f parameters.bicepparam ]; then
+            PARAMETERS='@parameters.bicepparam'
           else
-            PARAMETERS='@AVM/AKS/parameters.json'
+            PARAMETERS='@parameters.json'
           fi
-          az deployment group validate --resource-group ${{ secrets.AKS_RG }} --template-file AVM/AKS/main.bicep --parameters $PARAMETERS
+          az deployment group validate --resource-group ${{ secrets.AKS_RG }} --template-file main.bicep --parameters $PARAMETERS
 
   deploy-on-merge:
     needs: validate-and-whatif
@@ -116,9 +116,9 @@ jobs:
 
       - name: Deploy AKS
         run: |
-          if [ -f AVM/AKS/parameters.bicepparam ]; then
-            PARAMETERS='@AVM/AKS/parameters.bicepparam'
+          if [ -f parameters.bicepparam ]; then
+            PARAMETERS='@parameters.bicepparam'
           else
-            PARAMETERS='@AVM/AKS/parameters.json'
+            PARAMETERS='@parameters.json'
           fi
-          az deployment group create --resource-group ${{ secrets.AKS_RG }} --template-file AVM/AKS/main.bicep --parameters $PARAMETERS --confirm-with-what-if
+          az deployment group create --resource-group ${{ secrets.AKS_RG }} --template-file main.bicep --parameters $PARAMETERS --confirm-with-what-if
