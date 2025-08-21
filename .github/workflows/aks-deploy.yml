@@ -26,7 +26,8 @@ jobs:
             # Use a writable config dir inside the workspace
             export AZURE_CONFIG_DIR="$GITHUB_WORKSPACE/.azcfg"
             mkdir -p "$AZURE_CONFIG_DIR"
-
+            
+            az config set bicep.use_binary_from_path=false
             az bicep install --version v0.3.255
             az bicep version
 
