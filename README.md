@@ -1,6 +1,6 @@
 # AKS deployment (AVM)
 
-This folder contains an AKS deployment using Azure Verified Modules (AVM).
+This folder contains an AKS deployment using Azure Verified Modules.
 
 Files:
 - `main.bicep` - AVM-based AKS cluster module call
