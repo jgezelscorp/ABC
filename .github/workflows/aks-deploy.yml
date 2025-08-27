@@ -98,12 +98,12 @@ jobs:
             --parameters parameters.bicepparam
 
   deploy-on-merge:
-    # needs: validate-and-whatif
+    needs: validate-and-whatif
     runs-on: ubuntu-24.04
-    if: >
-      github.event_name == 'pull_request' &&
-      github.event.action == 'closed' &&
-      github.event.pull_request.merged == true
+    #if: >
+    #  github.event_name == 'pull_request' &&
+    #  github.event.action == 'closed' &&
+    #  github.event.pull_request.merged == true
     env:
       AZURE_CONFIG_DIR: ${{ github.workspace }}/.azcfg
       BICEP_VERSION: v0.37.4
